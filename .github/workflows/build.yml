@@ -23,8 +23,9 @@ jobs:
 
       # Aquí podrías agregar pasos adicionales para inicializar y construir el proyecto,
       # por ejemplo:
-      - name: Initialize Bubblewrap project
-        run: bubblewrap init --manifest="https://tu-dominio.com/manifest.json" --overwrite
+     - name: Initialize Bubblewrap project
+  run: bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+
 
       - name: Build APK
         run: bubblewrap build
