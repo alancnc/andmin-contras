@@ -23,10 +23,7 @@ jobs:
 
       - name: Initialize Bubblewrap project
         run: |
-          export BUBBLEWRAP_ACCEPT_LICENSES=true
-          export BUBBLEWRAP_INSTALL_JDK=true
-          export BUBBLEWRAP_INSTALL_ANDROID_SDK=true
-          bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          echo -e "Y\nY\n" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
         run: bubblewrap build
