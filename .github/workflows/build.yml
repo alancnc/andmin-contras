@@ -32,23 +32,34 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y expect
 
-      - name: Create expect script for Bubblewrap initialization
-        run: |
-          # Se crea el script expect en "bubblewrap_init.expect"
-          echo "spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite" > bubblewrap_init.expect
-          echo "expect \"*Do you want Bubblewrap to install the JDK*\" { send \"n\r\"; exp_continue }" >> bubblewrap_init.expect
-          # Insertamos la ruta del JDK (la variable JAVA_HOME se expande aquí)
-          echo "set jdk_path \"${JAVA_HOME}\"" >> bubblewrap_init.expect
-          echo "expect \"*Path to your existing JDK 17:*\" { send \"\$jdk_path\r\"; exp_continue }" >> bubblewrap_init.expect
-          echo "expect \"*Do you want Bubblewrap to install the Android SDK*\" { send \"n\r\" }" >> bubblewrap_init.expect
-          echo "expect eof" >> bubblewrap_init.expect
-
       - name: Run expect script to initialize Bubblewrap Project
         run: |
           export BUBBLEWRAP_ACCEPT_LICENSES=true
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          expect bubblewrap_init.expect
+
+          expect <<'EOF'
+          set timeout -1
+          # Inicia Bubblewrap con el manifiesto y el flag --overwrite
+          spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          # Responde "n" a la instalación del JDK
+          expect {
+            "*Do you want Bubblewrap to install the JDK*" {
+              send "n\r"
+              exp_continue
+            }
+            # Envía la ruta del JDK instalado
+            "*Path to your existing JDK 17:*" {
+              send "/usr/lib/jvm/java-17-openjdk-amd64\r"
+              exp_continue
+            }
+            # Responde "n" a la instalación del Android SDK
+            "*Do you want Bubblewrap to install the Android SDK*" {
+              send "n\r"
+            }
+          }
+          expect eof
+          EOF
 
       - name: Build APK
         run: bubblewrap build
@@ -57,4 +68,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: twa-apk
-          path: ./app-release-signed.apk 
+          path: ./app-release-signed.apk
