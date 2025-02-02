@@ -35,12 +35,7 @@ jobs:
           echo "JAVA_HOME is set to: $JAVA_HOME"
           ls -la "$JAVA_HOME"
 
-      # Nota: Ya no es necesario instalar expect
-      #- name: Install expect
-      #  run: |
-      #    sudo apt-get update
-      #    sudo apt-get install -y expect
-
+      # No es necesario usar expect; usaremos "script" para emular un TTY.
       - name: Initialize Bubblewrap Project
         run: |
           export BUBBLEWRAP_ACCEPT_LICENSES=true
@@ -48,14 +43,21 @@ jobs:
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
           echo "Using JAVA_HOME: $JAVA_HOME"
-          # Se alimentan los inputs de Bubblewrap de forma directa:
-          # 1. Responde "n" para no instalar el JDK.
-          # 2. Envía la ruta del JDK (obtenida de JAVA_HOME).
-          # 3. Responde "n" para no instalar el Android SDK.
-          printf "n\n%s\nn\n" "$JAVA_HOME" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          # Usamos "script" para crear un pseudo-TTY y enviar las respuestas de forma correcta.
+          # El comando "printf" envía las respuestas en el orden esperado:
+          #   1. "n" para no instalar el JDK.
+          #   2. La ruta del JDK (JAVA_HOME).
+          #   3. "n" para no instalar el Android SDK.
+          script -q -c "printf 'n\n%s\nn\n' \"$JAVA_HOME\" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite" /dev/null
 
       - name: Build APK
         run: bubblewrap build
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twa-apk
+          path: ./app-release-signed.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
