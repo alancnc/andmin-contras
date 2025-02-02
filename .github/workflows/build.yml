@@ -16,20 +16,24 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 16  # Sin comillas, para evitar errores
+          node-version: 16  # Sin comillas para evitar errores
 
       - name: Install Bubblewrap CLI globally
         run: npm install -g @bubblewrap/cli
 
       - name: Initialize Bubblewrap project
-        run: echo -e "Y\nY" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+        run: |
+          export BUBBLEWRAP_ACCEPT_LICENSES=true
+          export BUBBLEWRAP_INSTALL_JDK=true
+          export BUBBLEWRAP_INSTALL_ANDROID_SDK=true
+          bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
         run: bubblewrap build
 
-      # Opcional: subir el APK como un artefacto para descargarlo posteriormente
+      # Subir el APK como un artefacto descargable en GitHub Actions
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: my-app-apk
-          path: path/al/apk/app-release.apk
+          path: ./app-release-signed.apk  # Ajusta la ruta según donde Bubblewrap genere el APK
