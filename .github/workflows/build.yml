@@ -32,11 +32,11 @@ jobs:
           export BUBBLEWRAP_ACCEPT_LICENSES=true
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          echo "y" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          # Se envían dos respuestas "n" para responder "No" a la instalación del JDK y del Android SDK por parte de Bubblewrap.
+          printf "n\nn\n" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
-        run: |
-          bubblewrap build
+        run: bubblewrap build
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
