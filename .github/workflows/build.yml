@@ -22,7 +22,7 @@ jobs:
         run: npm install -g @bubblewrap/cli
 
       - name: Initialize Bubblewrap project
-        run: bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+        run:  echo "Y" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
         run: bubblewrap build
