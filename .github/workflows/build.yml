@@ -43,4 +43,3 @@ jobs:
         with:
           name: twa-apk
           path: ./app-release-signed.apk
-
