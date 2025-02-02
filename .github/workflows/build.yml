@@ -29,7 +29,7 @@ jobs:
 
       # Opcional: subir el APK como un artefacto para descargarlo posteriormente
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: my-app-apk
           path: path/al/apk/app-release.apk
