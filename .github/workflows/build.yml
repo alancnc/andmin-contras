@@ -11,8 +11,6 @@ jobs:
     env:
       BUBBLEWRAP_ACCEPT_LICENSES: true
       ANDROID_SDK_ROOT: $HOME/android-sdk
-      # Esta variable (si la versión de Bubblewrap la soporta) indicará que se use modo no interactivo
-      BUBBLEWRAP_NONINTERACTIVE: true
 
     steps:
       - name: Checkout repository
@@ -32,33 +30,28 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Verify JDK installation
+      - name: Install Android SDK
         run: |
-          echo "JAVA_HOME is set to: $JAVA_HOME"
-          ls -la "$JAVA_HOME"
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Initialize Bubblewrap Project
         run: |
-          # Exportamos las variables necesarias
-          export BUBBLEWRAP_ACCEPT_LICENSES=true
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          echo "Using JAVA_HOME: $JAVA_HOME"
-          # Se usa "script" para crear un pseudo-TTY y enviar las respuestas esperadas:
-          # 1. "n" para NO instalar el JDK.
-          # 2. La ruta del JDK (valor de JAVA_HOME).
-          # 3. "n" para NO instalar el Android SDK.
-          script -q -c "printf 'n\n%s\nn\n' \"$JAVA_HOME\" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite" /dev/null
-          echo "Archivos generados tras init:"
-          ls -la
+          
+          # Comando no interactivo con todas las respuestas preconfiguradas
+          bubblewrap init \
+            --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json \
+            --jdkPath="$JAVA_HOME" \
+            --androidSdkPath="$ANDROID_SDK_ROOT" \
+            --defaults \
+            --overwrite
 
       - name: Build APK
-        run: |
-          echo "Ejecutando bubblewrap build..."
-          # Utilizamos "script" para emular un TTY y forzar el envío de respuestas automáticas.
-          # La idea es alimentar con 'yes n' para que, si en el proceso de build se vuelve a preguntar,
-          # se responda siempre "n" (no instalar el JDK).
-          script -q -c "yes n | bubblewrap build" /dev/null
+        run: bubblewrap build
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
