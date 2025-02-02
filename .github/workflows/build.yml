@@ -1,9 +1,6 @@
-name: Build APK with Bubblewrap
+name: Build and Deploy
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
+on: push  # O el evento que estés usando
 
 jobs:
   build:
@@ -17,8 +14,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-
-      - name: Install Bubblewrap CLI globally
+ - name: Install Bubblewrap CLI globally
         run: npm install -g @bubblewrap/cli
 
       # Aquí podrías agregar pasos adicionales para inicializar y construir el proyecto,
