@@ -1,9 +1,9 @@
-name: Build and Deploy
+name: Build and Deploy TWA
 
 on:
   push:
     branches:
-      - main  # Asegúrate de que tu rama principal sea 'main' o 'master'
+      - main
 
 jobs:
   build:
@@ -16,21 +16,24 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 16  # Sin comillas para evitar errores
+          node-version: 16
 
-      - name: Install Bubblewrap CLI globally
+      - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Initialize Bubblewrap project
+      - name: Initialize Bubblewrap Project
         run: |
-          echo -e "Y\nY\n" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          export BUBBLEWRAP_ACCEPT_LICENSES=true
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+          yes | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
-        run: bubblewrap build
+        run: |
+          bubblewrap build
 
-      # Subir el APK como un artefacto descargable en GitHub Actions
-      - name: Upload APK artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: my-app-apk
-          path: ./app-release-signed.apk  # Ajusta la ruta según donde Bubblewrap genere el APK
+          name: twa-apk
+          path: ./app-release-signed.apk
