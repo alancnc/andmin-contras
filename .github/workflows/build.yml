@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BUBBLEWRAP_ACCEPT_LICENSES: true
+      ANDROID_SDK_ROOT: $HOME/android-sdk
 
     steps:
       - name: Checkout repository
@@ -27,36 +30,29 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install expect
+      - name: Verify JDK installation
         run: |
-          sudo apt-get update
-          sudo apt-get install -y expect
+          echo "JAVA_HOME is set to: $JAVA_HOME"
+          ls -la "$JAVA_HOME"
 
-      - name: Run expect script to initialize Bubblewrap Project
+      # Nota: Ya no es necesario instalar expect
+      #- name: Install expect
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install -y expect
+
+      - name: Initialize Bubblewrap Project
         run: |
           export BUBBLEWRAP_ACCEPT_LICENSES=true
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
-          expect <<'EOF'
-          set timeout 60
-          # Inicia Bubblewrap con el manifiesto y la opción --overwrite
-          spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
-          
-          # Espera el prompt para instalar el JDK y responde "n"
-          expect "*Do you want Bubblewrap to install the JDK*"
-          send "n\r"
-          
-          # Espera el prompt para ingresar la ruta del JDK 17 y envía la ruta instalada en Ubuntu
-          expect "*Path to your existing JDK 17:*"
-          send "/usr/lib/jvm/java-17-openjdk-amd64\r"
-          
-          # Espera el prompt para instalar el Android SDK y responde "n"
-          expect "*Do you want Bubblewrap to install the Android SDK*"
-          send "n\r"
-          
-          expect eof
-          EOF
+          echo "Using JAVA_HOME: $JAVA_HOME"
+          # Se alimentan los inputs de Bubblewrap de forma directa:
+          # 1. Responde "n" para no instalar el JDK.
+          # 2. Envía la ruta del JDK (obtenida de JAVA_HOME).
+          # 3. Responde "n" para no instalar el Android SDK.
+          printf "n\n%s\nn\n" "$JAVA_HOME" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
 
       - name: Build APK
         run: bubblewrap build
