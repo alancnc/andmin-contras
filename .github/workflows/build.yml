@@ -39,25 +39,22 @@ jobs:
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
           expect <<'EOF'
-          set timeout -1
-          # Inicia Bubblewrap con el manifiesto y el flag --overwrite
+          set timeout 60
+          # Inicia Bubblewrap con el manifiesto y la opción --overwrite
           spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
-          # Responde "n" a la instalación del JDK
-          expect {
-            "*Do you want Bubblewrap to install the JDK*" {
-              send "n\r"
-              exp_continue
-            }
-            # Envía la ruta del JDK instalado
-            "*Path to your existing JDK 17:*" {
-              send "/usr/lib/jvm/java-17-openjdk-amd64\r"
-              exp_continue
-            }
-            # Responde "n" a la instalación del Android SDK
-            "*Do you want Bubblewrap to install the Android SDK*" {
-              send "n\r"
-            }
-          }
+          
+          # Espera el prompt para instalar el JDK y responde "n"
+          expect "*Do you want Bubblewrap to install the JDK*"
+          send "n\r"
+          
+          # Espera el prompt para ingresar la ruta del JDK 17 y envía la ruta instalada en Ubuntu
+          expect "*Path to your existing JDK 17:*"
+          send "/usr/lib/jvm/java-17-openjdk-amd64\r"
+          
+          # Espera el prompt para instalar el Android SDK y responde "n"
+          expect "*Do you want Bubblewrap to install the Android SDK*"
+          send "n\r"
+          
           expect eof
           EOF
 
@@ -69,3 +66,4 @@ jobs:
         with:
           name: twa-apk
           path: ./app-release-signed.apk
+
