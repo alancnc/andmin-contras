@@ -22,26 +22,64 @@ jobs:
         run: npm install -g @bubblewrap/cli
 
       - name: Set up JDK 17
+        uses: actions/setup-java@v3name: Build and Deploy TWA
+        
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Create Bubblewrap responses file
+      - name: Install expect
         run: |
-          echo "n" > bubblewrap_responses.txt
-          echo "$JAVA_HOME" >> bubblewrap_responses.txt
-          echo "n" >> bubblewrap_responses.txt
+          sudo apt-get update
+          sudo apt-get install -y expect
 
-      - name: Initialize Bubblewrap Project
+      - name: Initialize Bubblewrap Project using expect
         run: |
           export BUBBLEWRAP_ACCEPT_LICENSES=true
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite < bubblewrap_responses.txt
+
+          expect << 'EOF'
+spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+expect {
+    "*Do you want Bubblewrap to install the JDK*" { send "n\r"; exp_continue }
+    "*Path to your existing JDK 17:*" { send "$env(JAVA_HOME)\r"; exp_continue }
+    "*Do you want Bubblewrap to install the Android SDK*" { send "n\r" }
+}
+expect eof
+EOF
 
       - name: Build APK
         run: bubblewrap build
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twa-apk
+          path: ./app-release-signed.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
