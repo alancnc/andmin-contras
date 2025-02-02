@@ -34,12 +34,13 @@ jobs:
 
       - name: Create expect script for Bubblewrap initialization
         run: |
+          # Se crea el script expect en "bubblewrap_init.expect"
           echo "spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite" > bubblewrap_init.expect
-          echo "expect {" >> bubblewrap_init.expect
-          echo "    \"*Do you want Bubblewrap to install the JDK*\" { send \"n\r\"; exp_continue }" >> bubblewrap_init.expect
-          echo "    \"*Path to your existing JDK 17:*\" { send \"\$env(JAVA_HOME)\r\"; exp_continue }" >> bubblewrap_init.expect
-          echo "    \"*Do you want Bubblewrap to install the Android SDK*\" { send \"n\r\" }" >> bubblewrap_init.expect
-          echo "}" >> bubblewrap_init.expect
+          echo "expect \"*Do you want Bubblewrap to install the JDK*\" { send \"n\r\"; exp_continue }" >> bubblewrap_init.expect
+          # Insertamos la ruta del JDK (la variable JAVA_HOME se expande aquí)
+          echo "set jdk_path \"${JAVA_HOME}\"" >> bubblewrap_init.expect
+          echo "expect \"*Path to your existing JDK 17:*\" { send \"\$jdk_path\r\"; exp_continue }" >> bubblewrap_init.expect
+          echo "expect \"*Do you want Bubblewrap to install the Android SDK*\" { send \"n\r\" }" >> bubblewrap_init.expect
           echo "expect eof" >> bubblewrap_init.expect
 
       - name: Run expect script to initialize Bubblewrap Project
