@@ -32,9 +32,12 @@ jobs:
           export BUBBLEWRAP_ACCEPT_LICENSES=true
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          # Responde "No" para que Bubblewrap no instale el JDK,
-          # luego provee la ruta al JDK existente y, por último, contesta "No" a la instalación del Android SDK.
-          printf "n\n%s\nn\n" "$JAVA_HOME" | bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          # Usamos un heredoc para responder a los prompts de Bubblewrap:
+          bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite <<EOF
+n
+$JAVA_HOME
+n
+EOF
 
       - name: Build APK
         run: bubblewrap build
