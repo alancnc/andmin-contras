@@ -8,9 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      BUBBLEWRAP_ACCEPT_LICENSES: true
-      ANDROID_SDK_ROOT: $HOME/android-sdk
 
     steps:
       - name: Checkout repository
@@ -30,34 +27,37 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK
+      - name: Install expect
         run: |
-          # Descargar herramientas CLI actualizadas (versión 11076708)
-          mkdir -p $ANDROID_SDK_ROOT
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip commandlinetools-linux-*.zip -d $ANDROID_SDK_ROOT/cmdline-tools
-          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          sudo apt-get update
+          sudo apt-get install -y expect
 
-          # Configurar variables y aceptar licencias
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
-
-      - name: Initialize Bubblewrap Project
+      - name: Create expect script for Bubblewrap initialization
         run: |
+          cat <<EOF > bubblewrap_init.expect
+          spawn bubblewrap init --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json --overwrite
+          expect "Do you want Bubblewrap to install the JDK*" { send "n\r"; exp_continue }
+          expect "Path to your existing JDK 17:*" { send "$JAVA_HOME\r"; exp_continue }
+          expect "Do you want Bubblewrap to install the Android SDK*" { send "n\r" }
+          expect eof
+          EOF
+
+      - name: Run expect script to initialize Bubblewrap Project
+        run: |
+          export BUBBLEWRAP_ACCEPT_LICENSES=true
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          bubblewrap init \
-            --manifest=https://unrivaled-medovik-6879ce.netlify.app/manifest.json \
-            --jdkPath="$JAVA_HOME" \
-            --androidSdkPath="$ANDROID_SDK_ROOT" \
-            --defaults \
-            --overwrite
+          expect bubblewrap_init.expect
 
       - name: Build APK
-        run: bubblewrap build
+        run: |
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
+          echo "JAVA_HOME is set to $JAVA_HOME"
+          bubblewrap build
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: twa-apk
           path: ./app-release-signed.apk
+
