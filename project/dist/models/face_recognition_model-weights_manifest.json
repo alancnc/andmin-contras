@@ -1,0 +1,6 @@
+{
+  "weightsManifest": [{
+    "paths": ["face_recognition_model-shard1"],
+    "weights": []
+  }]
+}
