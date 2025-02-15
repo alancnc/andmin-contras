@@ -1,0 +1,6 @@
+{
+  "weightsManifest": [{
+    "paths": ["face_landmark_68_model-shard1"],
+    "weights": []
+  }]
+}

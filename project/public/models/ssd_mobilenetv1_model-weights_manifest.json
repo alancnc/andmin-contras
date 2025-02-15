@@ -1,0 +1,6 @@
+{
+  "weightsManifest": [{
+    "paths": ["ssd_mobilenetv1_model-shard1"],
+    "weights": []
+  }]
+}
